@@ -3,4 +3,4 @@ Hopefully you will find some usefulness in the following programs.  Their purpos
 
 - [parse_command_line.c][01]: Deomstrate reading a string and an integer from the command line
 
-[01] 
+[01] https://github.com/CSE3320/Assignment-1/blob/master/Useful-Examples/parse_command_line.c
