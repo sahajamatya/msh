@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 // 
-// Copyright (c) 2016, 2017 Trevor Bakker 
+// Copyright (c) 2016, 2017, 2020 Trevor Bakker 
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -63,7 +63,7 @@ int main()
                                                            
     // Pointer to point to the token
     // parsed by strsep
-    char *arg_ptr;                                         
+    char *argument_ptr;                                         
                                                            
     char *working_str  = strdup( cmd_str );                
 
@@ -73,10 +73,10 @@ int main()
     char *working_root = working_str;
 
     // Tokenize the input stringswith whitespace used as the delimiter
-    while ( ( (arg_ptr = strsep(&working_str, WHITESPACE ) ) != NULL) && 
+    while ( ( (argument_ptr = strsep(&working_str, WHITESPACE ) ) != NULL) && 
               (token_count<MAX_NUM_ARGUMENTS))
     {
-      token[token_count] = strndup( arg_ptr, MAX_COMMAND_SIZE );
+      token[token_count] = strndup( argument_ptr, MAX_COMMAND_SIZE );
       if( strlen( token[token_count] ) == 0 )
       {
         token[token_count] = NULL;
