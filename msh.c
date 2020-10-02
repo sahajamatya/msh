@@ -1,3 +1,9 @@
+/*
+ *
+ * Name: Sahaj Amatya 
+ * UTA ID: 1001661825 
+ *
+ */
 // The MIT License (MIT)
 // 
 // Copyright (c) 2016, 2017, 2020 Trevor Bakker 
@@ -37,7 +43,7 @@
 
 #define MAX_COMMAND_SIZE 255    // The maximum command-line size
 
-#define MAX_NUM_ARGUMENTS 5     // Mav shell only supports five arguments
+#define MAX_NUM_ARGUMENTS 10     // Mav shell only supports five arguments
 
 int main()
 {
@@ -87,14 +93,46 @@ int main()
     // Now print the tokenized input as a debug check
     // \TODO Remove this code and replace with your shell functionality
 
-    int token_index  = 0;
-    for( token_index = 0; token_index < token_count; token_index ++ ) 
-    {
-      printf("token[%d] = %s\n", token_index, token[token_index] );  
+    //int token_index  = 0;
+    //for( token_index = 0; token_index < token_count; token_index ++ ) 
+    //{
+    //  printf("token[%d] = %s\n", token_index, token[token_index] );  
+    // }
+   
+    pid_t pid = fork();
+    if(pid == 0){
+      char *arguments[10];
+      int token_index;
+      arguments[token_count - 1] = NULL;
+      for(token_index = 0; token_index < token_count-1; token_index++){
+	arguments[token_index] = ( char * ) malloc ( strlen( token[token_index] ));
+        strncpy( arguments[token_index], token[token_index], strlen(token[token_index]));	
+      }  
+      if(execvp( arguments[0], &arguments[0]) == -1 ){
+	  printf("%s: Command not found.\n\n", token[0]);
+      }
+//      arguments[0] = ( char * ) malloc ( strlen( token[0] ));
+//      strncpy( arguments[0], token[0], strlen(token[0]));
+//      arguments[1] = NULL;
+      
+    } else {
+        int status;
+	wait( &status);
+        printf("Total commands: %d\n", token_count);
     }
+       
 
+    //char location[MAX_COMMAND_SIZE]="/bin/";
+    //strcat(location, token[0]);
+    //pid_t pid = fork();
+    //if( pid == 0 ){
+    //  execvp(location, token[0], NULL);
+    //  printf("%s: Command not found.\n\n", token[0]);
+    //} else {
+    //  int status;
+    //  wait( &status );
+    //}
     free( working_root );
-
   }
   return 0;
 }
