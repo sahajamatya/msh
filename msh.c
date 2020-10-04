@@ -1,8 +1,20 @@
 /*
  *
- * Name: Sahaj Amatya 
- * UTA ID: 1001661825 
+ * Name: Sahaj Amatya
+ * UTA ID: 1001661825
  *
+ *          ___           ___           ___     
+ *         /__/\         /  /\         /__/\
+ *        |  |::\       /  /:/_        \  \:\
+ *        |  |:|:\     /  /:/ /\        \__\:\
+ *      __|__|:|\:\   /  /:/ /::\   ___ /  /::\
+ *     /__/::::| \:\ /__/:/ /:/\:\ /__/\  /:/\:\
+ *     \  \:\~~\__\/ \  \:\/:/~/:/ \  \:\/:/__\/
+ *      \  \:\        \  \::/ /:/   \  \::/     
+ *       \  \:\        \__\/ /:/     \  \:\
+ *        \  \:\         /__/:/       \  \:\
+ *         \__\/         \__\/         \__\/    
+ *                                              
  */
 
 // The MIT License (MIT)
@@ -49,51 +61,115 @@
 #define MAX_NUM_BUILTINS 7
 #define MAX_NUM_PIDS 15
 
+/*
+ * This is the Queue where the PIDs will be stored.
+ */
 pid_t PIDQueue[MAX_NUM_PIDS];
 int front = -1;
 int rear = -1;
-int capacity = -1;
 
+/*
+ * This is the Queue where the command history will be stored.
+ */
+char *historyRecords[MAX_NUM_HISTORY];
+int frontHist = -1;
+int rearHist = -1;
+
+/*
+ * Function to dequeue PIDs, removes the head and shifts all entries back by
+ * an index.
+ */
+void dequeuePID()
+{
+  int j;
+  for (j = 0; j < MAX_NUM_PIDS - 1; j++)
+  {
+    PIDQueue[j] = PIDQueue[j + 1];
+  }
+  rear--;
+}
+
+/*
+ * Function to enqueue PIDs, queue will be dequeued when number of entries surpasses
+ * MAX_NUM_PIDS.
+ */
 void enqueuePID(pid_t data)
 {
-  if (capacity < MAX_NUM_PIDS)
+  if (rear == MAX_NUM_PIDS - 1)
   {
-    if (capacity < 0)
-    {
-      PIDQueue[0] = data;
-      front = rear = 0;
-      capacity = 1;
-    }
-    else if (rear == MAX_NUM_PIDS - 1)
-    {
-      PIDQueue[0] = data;
-      rear = 0;
-      capacity++;
-    }
+    dequeuePID();
   }
-  else
+  if (front == -1)
   {
-    return;
+    front = 0;
   }
+  rear++;
+  PIDQueue[rear] = data;
 }
 
-void dequeuePID(){
-  if(capacity<0){
-    return;
-  }
-  else {
-    capacity--;
-    front++;
-  }
-}
-
-void showpids(){
+/*
+ * Function to print all PIDs of process created by the program.
+ */
+void showpids()
+{
   int i;
-  for(i=front;i<=rear;i++){
+  printf("PID\n------\n");
+  for (i = front; i <= rear; i++)
+  {
     printf("%d\n", PIDQueue[i]);
   }
 }
 
+/*
+ * Function to dequeue command history, removes the head and shifts all entries back by
+ * an index.
+ */
+void dequeueHistory()
+{
+  int j;
+  for (j = 0; j < MAX_NUM_HISTORY - 1; j++)
+  {
+    historyRecords[j] = historyRecords[j + 1];
+  }
+  rearHist--;
+}
+
+/*
+ * Function to enqueue command to history, queue will be dequeued when number of entries surpasses
+ * MAX_NUM_HISTORY.
+ */
+void enqueueHistory(char *cmd)
+{
+  if (rearHist == MAX_NUM_HISTORY - 1)
+  {
+    dequeueHistory();
+  }
+  if (frontHist == -1)
+  {
+    frontHist = 0;
+  }
+  rearHist++;
+  historyRecords[rearHist] = (char *)malloc(strlen(cmd));
+  strcpy(historyRecords[rearHist], cmd);
+}
+
+/*
+ * Function to print all commands in historyRecords[]
+ */
+void showHistory()
+{
+  int i;
+  for (i = frontHist; i <= rearHist; i++)
+  {
+    printf("[%d]: %s", i, historyRecords[i]);
+  }
+}
+
+/*
+ * Function to check if the command entered is a builtin command.
+ * Builtin commands are listed in char* dict
+ * returns 1 if command is present in dict, 0 if not 
+ */
 int checkCMD(char *cmd)
 {
   char *dict[MAX_NUM_BUILTINS] = {"quit", "q", "exit", "showpids", "history", "cd", "\n"};
@@ -112,7 +188,6 @@ int checkCMD(char *cmd)
 
 int main()
 {
-
   char *cmd_str = (char *)malloc(MAX_COMMAND_SIZE);
 
   while (1)
@@ -126,11 +201,31 @@ int main()
     // inputs something since fgets returns NULL when there
     // is no input
     while (!fgets(cmd_str, MAX_COMMAND_SIZE, stdin))
-    ;
-
-      /* Parse input */
-      char *token[MAX_NUM_ARGUMENTS];
-    char history[MAX_NUM_HISTORY][MAX_NUM_ARGUMENTS];
+      ;
+    if(strcmp(cmd_str, "\n")!=0){
+      enqueueHistory(cmd_str); // enqueue command entered to historyRecords[]
+    }
+    /* 
+     * The following container pulls commands from historyRecords[].
+     * It extracts the "!" off the command and stores the cmd index. 
+     * The command in historyRecords[cmdIndex] is then stored in cmd_str to be
+     * executed later on by the program.
+     */
+    if (cmd_str[0] == '!')
+    {
+      int cmdIndex;
+      sscanf(cmd_str, "%*c%d", &cmdIndex);
+      if (cmdIndex >= 0 && cmdIndex <= rearHist)
+      {
+        strcpy(cmd_str, historyRecords[cmdIndex]);
+      }
+      else
+      {
+        //do noting, code will flow to : Command not found
+      }
+    }
+    /* Parse input */
+    char *token[MAX_NUM_ARGUMENTS];
     int token_count = 0;
 
     // Pointer to point to the token
@@ -157,12 +252,11 @@ int main()
     }
 
     free(working_root);
-    char *arguments[10];
+    char *arguments[MAX_NUM_ARGUMENTS];
     int token_index;
     arguments[token_count - 1] = NULL;
     pid_t pid = fork();
-    int historyIndex = 0;
-    if (token[0] == NULL)
+    if (token[0] == NULL) //to counter segfault when user hits return
     {
       token[0] = "\n";
     }
@@ -174,7 +268,6 @@ int main()
       if (strcmp(token[0], "quit") == 0 || strcmp(token[0], "exit") == 0 || strcmp(token[0], "q") == 0)
       {
         kill(0, SIGINT);
-        //exit(0);
       }
       if (strcmp(token[0], "cd") == 0)
       {
@@ -185,27 +278,22 @@ int main()
       }
       if (strcmp(token[0], "showpids") == 0)
       {
-        printf("This will showpids.\n");
-	showpids();
+        showpids();
       }
       if (strcmp(token[0], "history") == 0)
       {
-        printf("This will show history.\n");
+        showHistory();
       }
     }
     else
     {
       if (pid == 0)
-      {
-	enqueuePID(getpid());
+      { //this for loop prepares arguments[] for the execvp syscall
         for (token_index = 0; token_index < token_count - 1; token_index++)
         {
           arguments[token_index] = (char *)malloc(strlen(token[token_index]));
           strncpy(arguments[token_index], token[token_index], strlen(token[token_index]));
-          strcat(history[historyIndex], arguments[token_index]);
-          historyIndex++;
         }
-
         if (execvp(arguments[0], &arguments[0]) == -1)
         {
           printf("%s: Command not found.\n\n", token[0]);
@@ -215,6 +303,7 @@ int main()
       {
         int status;
         wait(&status);
+        enqueuePID(getpid());
       }
     }
   }
