@@ -57,9 +57,9 @@
 #define MAX_COMMAND_SIZE 255 // The maximum command-line size
 
 #define MAX_NUM_ARGUMENTS 10 // Mav shell only supports TEN arguments
-#define MAX_NUM_HISTORY 15
-#define MAX_NUM_BUILTINS 7
-#define MAX_NUM_PIDS 15
+#define MAX_NUM_HISTORY 15   // MSH history will only store upto 15 commands
+#define MAX_NUM_BUILTINS 7   // Built-in cmds, eg., "quit", "q", "cd", etc.
+#define MAX_NUM_PIDS 15      // MSH will store the PIDs upto the last 15 processes
 
 /*
  * This is the Queue where the PIDs will be stored.
@@ -108,7 +108,7 @@ void enqueuePID(pid_t data)
 }
 
 /*
- * Function to print all PIDs of process created by the program.
+ * Function to print all PIDs of processes created by the program.
  */
 void showpids()
 {
@@ -167,8 +167,8 @@ void showHistory()
 
 /*
  * Function to check if the command entered is a builtin command.
- * Builtin commands are listed in char* dict
- * returns 1 if command is present in dict, 0 if not 
+ * Builtin commands are listed in char* dict[].
+ * Returns 1 if command is present in dict, 0 if not 
  */
 int checkCMD(char *cmd)
 {
@@ -200,11 +200,12 @@ int main()
     // This while command will wait here until the user
     // inputs something since fgets returns NULL when there
     // is no input
-    while (!fgets(cmd_str, MAX_COMMAND_SIZE, stdin))
-      ;
-    if(strcmp(cmd_str, "\n")!=0){
-      enqueueHistory(cmd_str); // enqueue command entered to historyRecords[]
-    }
+    while (!fgets(cmd_str, MAX_COMMAND_SIZE, stdin));
+
+    if (strcmp(cmd_str, "\n") != 0)
+    {
+      enqueueHistory(cmd_str); // enqueue entered cmd to historyRecords[],
+    }                          // it will not store when user hits ENTER.
     /* 
      * The following container pulls commands from historyRecords[].
      * It extracts the "!" off the command and stores the cmd index. 
@@ -221,7 +222,7 @@ int main()
       }
       else
       {
-        //do noting, code will flow to : Command not found
+        continue;
       }
     }
     /* Parse input */
@@ -255,7 +256,6 @@ int main()
     char *arguments[MAX_NUM_ARGUMENTS];
     int token_index;
     arguments[token_count - 1] = NULL;
-    pid_t pid = fork();
     if (token[0] == NULL) //to counter segfault when user hits return
     {
       token[0] = "\n";
@@ -263,32 +263,34 @@ int main()
     int isBuiltinCMD = checkCMD(token[0]);
     if (isBuiltinCMD)
     {
-      int status;
-      wait(&status);
-      if (strcmp(token[0], "quit") == 0 || strcmp(token[0], "exit") == 0 || strcmp(token[0], "q") == 0)
+      if (strcmp(token[0], "quit") == 0 || strcmp(token[0], "exit") == 0 
+		      || strcmp(token[0], "q") == 0)
       {
-        kill(0, SIGINT);
+        exit(0);
       }
-      if (strcmp(token[0], "cd") == 0)
+      else if (strcmp(token[0], "cd") == 0)
       {
         if (chdir(token[1]) == -1)
         {
           printf("%s: No such file or directory.\n", token[1]);
         }
       }
-      if (strcmp(token[0], "showpids") == 0)
+      else if (strcmp(token[0], "showpids") == 0)
       {
         showpids();
       }
-      if (strcmp(token[0], "history") == 0)
+      else if (strcmp(token[0], "history") == 0)
       {
         showHistory();
       }
     }
     else
     {
+      pid_t pid = fork();
       if (pid == 0)
-      { //this for loop prepares arguments[] for the execvp syscall
+      { //this for loop prepares arguments[] for the execvp syscall,
+        //inspired by 
+	//https://github.com/CSE3320/Shell-Assignment/blob/master/Useful-Examples/execvp.c
         for (token_index = 0; token_index < token_count - 1; token_index++)
         {
           arguments[token_index] = (char *)malloc(strlen(token[token_index]));
@@ -297,13 +299,14 @@ int main()
         if (execvp(arguments[0], &arguments[0]) == -1)
         {
           printf("%s: Command not found.\n\n", token[0]);
-        }
+	  exit(0);
+	}
       }
       else if (pid > 0)
       {
         int status;
         wait(&status);
-        enqueuePID(getpid());
+        enqueuePID(pid);
       }
     }
   }
