@@ -49,9 +49,9 @@
 #include <string.h>
 #include <signal.h>
 
-#define WHITESPACE " \t\n" // We want to split our command line up into tokens \
-                           // so we need to define what delimits our tokens.   \
-                           // In this case  white space                        \
+#define WHITESPACE " \t\n" // We want to split our command line up into tokens 
+                           // so we need to define what delimits our tokens.   
+                           // In this case  white space                        
                            // will separate the tokens on our command line
 
 #define MAX_COMMAND_SIZE 255 // The maximum command-line size
@@ -201,17 +201,6 @@ int main()
     // inputs something since fgets returns NULL when there
     // is no input
     while (!fgets(cmd_str, MAX_COMMAND_SIZE, stdin));
-
-    if (strcmp(cmd_str, "\n") != 0)
-    {
-      enqueueHistory(cmd_str); // enqueue entered cmd to historyRecords[],
-    }                          // it will not store when user hits ENTER.
-    /* 
-     * The following container pulls commands from historyRecords[].
-     * It extracts the "!" off the command and stores the cmd index. 
-     * The command in historyRecords[cmdIndex] is then stored in cmd_str to be
-     * executed later on by the program.
-     */
     if (cmd_str[0] == '!')
     {
       int cmdIndex;
@@ -225,7 +214,18 @@ int main()
         continue;
       }
     }
-    /* Parse input */
+
+    if (strcmp(cmd_str, "\n") != 0)
+    {
+      enqueueHistory(cmd_str); // enqueue entered cmd to historyRecords[],
+    }                          // it will not store when user hits ENTER.
+    /* 
+     * The following container pulls commands from historyRecords[].
+     * It extracts the "!" off the command and stores the cmd index. 
+     * The command in historyRecords[cmdIndex] is then stored in cmd_str to be
+     * executed later on by the program.
+     */
+     /* Parse input */
     char *token[MAX_NUM_ARGUMENTS];
     int token_count = 0;
 
