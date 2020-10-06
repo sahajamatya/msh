@@ -161,7 +161,7 @@ void showHistory()
   int i;
   for (i = frontHist; i <= rearHist; i++)
   {
-    printf("[%d]: %s", i, historyRecords[i]);
+    printf("[%d]: %s", i+1, historyRecords[i]);
   }
 }
 
@@ -205,13 +205,14 @@ int main()
     {
       int cmdIndex;
       sscanf(cmd_str, "%*c%d", &cmdIndex);
-      if (cmdIndex >= 0 && cmdIndex <= rearHist)
+      if (cmdIndex >= 1 && cmdIndex <= rearHist+1)
       {
-        strcpy(cmd_str, historyRecords[cmdIndex]);
+        strcpy(cmd_str, historyRecords[cmdIndex-1]);
       }
       else
       {
-        continue;
+        printf("Command not in history.\n");
+        strcpy(cmd_str, "\n");
       }
     }
 
